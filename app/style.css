@@ -1,11 +1,11 @@
 :root {
-  color-scheme: dark;
-  --bg: #171a18;
-  --panel: #212622;
-  --line: #374139;
-  --muted: #a2ada4;
-  --ink: #edf1eb;
-  --mint: #b2dec0;
+  color-scheme: light;
+  --bg: #f2f1eb;
+  --panel: #fbfcf8;
+  --line: #d3d9ce;
+  --muted: #667364;
+  --ink: #253b2d;
+  --mint: #397351;
 }
 * {
   box-sizing: border-box;
@@ -143,7 +143,7 @@ time,
 }
 .primary {
   background: var(--mint);
-  color: #17281c;
+  color: #ffffff;
   border-color: var(--mint);
   font-weight: 650;
 }
@@ -182,7 +182,7 @@ textarea {
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  background: #151917;
+  background: #fbfcf8;
   color: var(--ink);
 }
 nav input {
@@ -209,7 +209,7 @@ nav input {
   border: 0;
 }
 .lane.target {
-  background: #29372d;
+  background: #e1eadd;
   border-radius: 8px;
 }
 .lane h2 {
@@ -249,7 +249,7 @@ nav input {
 }
 .task:hover {
   transform: translateY(-2px);
-  background: #2a312b;
+  background: #ffffff;
 }
 .task.dragging {
   opacity: 0.5;
@@ -398,4 +398,294 @@ label {
 }
 .actions {
   flex-wrap: wrap;
+}
+/* Workshop wayfinding follows the board's real task and presence state. */
+.brand i {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  transform: none;
+}
+.brand svg {
+  width: 24px;
+  height: 24px;
+}
+header {
+  background: #e7ebe1;
+}
+.intro {
+  padding-top: 40px;
+  padding-bottom: 26px;
+}
+.intro small {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  letter-spacing: 0.13em;
+}
+.project-index {
+  font-size: 10px;
+  border: 1px solid var(--line);
+  padding: 3px 7px;
+  border-radius: 3px;
+  color: var(--mint);
+}
+.board-overview {
+  margin: 0 3.5% 25px;
+  padding: 17px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: 230px minmax(120px, 1fr) 240px;
+  gap: 32px;
+  align-items: center;
+}
+.overview-label {
+  font: 9px monospace;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+.board-overview p {
+  margin: 5px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.board-overview strong {
+  font-weight: 500;
+  color: var(--ink);
+  font-size: 18px;
+}
+.board-overview p > span {
+  margin: 0 10px;
+  color: #637267;
+}
+.progress-track {
+  height: 5px;
+  background: #d9e0d4;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.progress-track > span {
+  display: block;
+  height: 100%;
+  background: var(--mint);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+.board-overview .collaboration-note {
+  position: relative;
+  padding-left: 25px;
+  line-height: 1.6;
+}
+.collaboration-note > span {
+  position: absolute;
+  left: 0;
+  top: -3px;
+  color: var(--mint);
+  font-size: 22px;
+}
+.collaboration-note small {
+  font-size: 10px;
+}
+nav .tab {
+  position: relative;
+}
+nav .tab.active:after {
+  content: "";
+  position: absolute;
+  bottom: -13px;
+  left: 10px;
+  right: 10px;
+  height: 2px;
+  background: var(--mint);
+}
+.lane h2 {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+.lane h2 .lane-index {
+  font-size: 9px;
+  color: #718275;
+  margin-right: 3px;
+}
+.lane {
+  border-top: 2px solid transparent;
+}
+.lane.target {
+  border-top-color: var(--mint);
+  background: #e1eadd;
+  box-shadow: inset 0 0 0 1px #6a987340;
+}
+.lane.target h2 {
+  color: var(--mint);
+}
+.task {
+  border-radius: 4px;
+  border-color: #d0d8c9;
+  position: relative;
+  box-shadow: 0 3px 0 #0c100d26;
+  animation: task-arrive 0.18s ease-out;
+}
+.task:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 17px;
+  bottom: 17px;
+  width: 2px;
+  background: var(--mint);
+  opacity: 0;
+  transition: opacity 0.18s;
+}
+.task:hover:before,
+.task:focus-visible:before {
+  opacity: 1;
+}
+.task:hover {
+  border-color: #789681;
+  box-shadow: 0 7px 15px #0002;
+}
+.task.dragging {
+  opacity: 0.35;
+  transform: rotate(-2deg) scale(0.98);
+  cursor: grabbing;
+}
+.task small {
+  font-size: 9px;
+  color: #687c66;
+  letter-spacing: 0.14em;
+}
+.task strong {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.add {
+  padding-left: 0;
+}
+.add:hover {
+  color: var(--mint);
+  background: none;
+}
+.status.is-pending b {
+  background: #e9b892;
+  animation: sync-pulse 1.2s ease-in-out infinite;
+}
+.status.is-synced b {
+  box-shadow: 0 0 0 3px #b2dec016;
+}
+.cursor b {
+  border-radius: 0 5px 5px 5px;
+  padding: 5px 7px;
+  background: #263e2e;
+  color: #ffffff;
+}
+.drawer {
+  border-left: 1px solid #617865;
+  animation: drawer-arrive 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.backdrop {
+  animation: backdrop-arrive 0.16s ease;
+}
+.drawer textarea {
+  line-height: 1.65;
+}
+.drawer article {
+  animation: task-arrive 0.18s ease-out;
+}
+.notice {
+  border-bottom: 1px solid var(--line);
+  background: #253229;
+  color: #d7e9da;
+  font-size: 13px;
+}
+@keyframes task-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes drawer-arrive {
+  from {
+    transform: translateX(28px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes backdrop-arrive {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sync-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (max-width: 900px) {
+  .board-overview {
+    grid-template-columns: 190px 1fr;
+    gap: 24px;
+  }
+  .collaboration-note {
+    display: none;
+  }
+}
+@media (max-width: 560px) {
+  .board-overview {
+    margin: 0 16px 20px;
+    padding: 13px 0;
+    grid-template-columns: 1fr 90px;
+    gap: 20px;
+  }
+  .overview-label {
+    font-size: 8px;
+  }
+  .board-overview strong {
+    font-size: 16px;
+  }
+  .intro small {
+    font-size: 9px;
+  }
+  .intro h1 {
+    font-size: 40px;
+  }
+  .lane {
+    padding-top: 16px;
+  }
+  .drawer {
+    padding: 22px;
+  }
+  .progress-track {
+    height: 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .task:hover,
+  .task.dragging {
+    transform: none;
+  }
+}
+.brand i {
+  background: #c7ddbd;
+  color: #253b2d;
+}
+.board-overview .collaboration-note > span {
+  margin: 0;
 }

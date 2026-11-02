@@ -181,6 +181,9 @@ export default function Board() {
     events = [...doc.getMap<Entry>("events").values()].sort(
       (a, b) => b.at - a.at,
     );
+  const completed = cards.filter(
+    ([, item]) => item.get("lane") === "Done",
+  ).length;
   function move(id: string, lane: string, before?: string) {
     const c = doc.getMap<Card>("cards").get(id);
     if (!c || before === id) return;
@@ -229,12 +232,28 @@ export default function Board() {
     <main>
       <header>
         <a className="brand" href="./">
-          <i>∥</i> SyncBoard
+          <i aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M6 5v10a4 4 0 0 0 4 4h8M18 19V9a4 4 0 0 0-4-4H6"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              />
+              <circle cx="6" cy="5" r="2.5" fill="currentColor" />
+              <circle cx="18" cy="19" r="2.5" fill="currentColor" />
+            </svg>
+          </i>{" "}
+          SyncBoard
         </a>
         <span className="divider">/</span>
         <span className="subtle">Shared workspace</span>
         <div className="spacer" />
-        <span className="status">
+        <span
+          className={
+            "status " + (status === "Synced" ? "is-synced" : "is-pending")
+          }
+          role="status"
+        >
           <b />
           {status}
         </span>
@@ -262,7 +281,9 @@ export default function Board() {
       )}
       <section className="intro">
         <div>
-          <small>STUDIO / PROJECTS</small>
+          <small>
+            STUDIO / PROJECTS <span className="project-index">01</span>
+          </small>
           {renaming ? (
             <form
               onSubmit={(e) => {
@@ -334,6 +355,40 @@ export default function Board() {
           </button>
         </div>
       </section>
+      {ready && (
+        <section className="board-overview" aria-label="Board progress">
+          <div>
+            <span className="overview-label">THE WORK, AT A GLANCE</span>
+            <p>
+              <strong>{cards.length}</strong> tasks{" "}
+              <span aria-hidden="true">/</span> <strong>{completed}</strong>{" "}
+              complete
+            </p>
+          </div>
+          <div
+            className="progress-track"
+            role="progressbar"
+            aria-label="Completed tasks"
+            aria-valuemin={0}
+            aria-valuemax={cards.length || 1}
+            aria-valuenow={completed}
+          >
+            <span
+              style={{
+                width: `${cards.length ? (completed / cards.length) * 100 : 0}%`,
+              }}
+            />
+          </div>
+          <p className="collaboration-note">
+            <span aria-hidden="true">↗</span> Changes travel with you.
+            <br />
+            <small>
+              {peers.length} {peers.length === 1 ? "person" : "people"} in this
+              workspace
+            </small>
+          </p>
+        </section>
+      )}
       <nav>
         <button
           className={!panel ? "tab active" : "tab"}
@@ -425,6 +480,7 @@ export default function Board() {
                 >
                   <h2>
                     <i style={{ background: colors[index] }} />
+                    <span className="lane-index">0{index + 1}</span>
                     {lane}
                     <span>{visible.length}</span>
                     <button
@@ -570,13 +626,11 @@ export default function Board() {
                 e.preventDefault();
                 if (!comment.trim()) return;
                 doc.transact(() => {
-                  card
-                    .get("comments")
-                    .set(crypto.randomUUID(), {
-                      name: name.current,
-                      body: comment.trim(),
-                      at: Date.now(),
-                    });
+                  card.get("comments").set(crypto.randomUUID(), {
+                    name: name.current,
+                    body: comment.trim(),
+                    at: Date.now(),
+                  });
                   log(
                     doc,
                     name.current,

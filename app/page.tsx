@@ -2,6 +2,7 @@
 import * as Y from "yjs";
 import { useEffect, useRef, useState } from "react";
 import { addCard, lanes, log, replaceText } from "../lib/model.mjs";
+import ProductIntro from "./product-intro";
 
 type Peer = { id: string; name: string; x: number | null; y: number | null };
 type Entry = { actor: string; action: string; title: string; at: number };
@@ -20,6 +21,7 @@ function color(id: string) {
   return colors[(id.charCodeAt(0) || 0) % colors.length];
 }
 export default function Board() {
+  const [view, setView] = useState(false);
   const [doc] = useState(() => new Y.Doc()),
     [, render] = useState(0),
     [status, setStatus] = useState("Connecting"),
@@ -48,6 +50,7 @@ export default function Board() {
   useEffect(() => {
     const url = new URL(location.href),
       provided = url.searchParams.get("board");
+    setView(Boolean(provided));
     if (provided && !/^[a-f0-9]{32}$/.test(provided)) {
       setStatus("Invalid board link");
       return;
@@ -154,6 +157,7 @@ export default function Board() {
   }, [doc]);
   useEffect(() => {
     function key(e: KeyboardEvent) {
+      if (!view) return;
       const input = (e.target as HTMLElement)?.matches("input,textarea,select");
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
@@ -173,7 +177,12 @@ export default function Board() {
     }
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [ready]);
+  }, [ready, view]);
+  useEffect(() => {
+    if (!view) return;
+    document.getElementById("workspace")?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [view]);
   const cards = [...doc.getMap<Card>("cards").entries()].sort(
     (a, b) => a[1].get("rank") - b[1].get("rank") || a[0].localeCompare(b[0]),
   );
@@ -228,8 +237,27 @@ export default function Board() {
       setNotice(location.href);
     }
   }
+  if (!view)
+    return (
+      <ProductIntro
+        cards={cards.map(([id, c]) => ({
+          id,
+          title: c.get("title").toString(),
+          lane: c.get("lane"),
+        }))}
+        ready={ready}
+        status={status}
+        peers={peers.length}
+        onOpen={() => setView(true)}
+        onMove={(id) => {
+          const c = doc.getMap<Card>("cards").get(id);
+          if (c)
+            move(id, lanes[(lanes.indexOf(c.get("lane")) + 1) % lanes.length]);
+        }}
+      />
+    );
   return (
-    <main>
+    <main id="workspace" tabIndex={-1}>
       <header>
         <a className="brand" href="./">
           <i aria-hidden="true">

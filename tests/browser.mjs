@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { chromium } from "playwright-core";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { once } from "node:events";
@@ -8,6 +8,8 @@ import { createServer } from "node:net";
 import { spawn } from "node:child_process";
 
 const root = await mkdtemp(join(tmpdir(), "syncboard-ui-"));
+const out = process.env.QA_OUTPUT || ".qa/redesign";
+await mkdir(out, { recursive: true });
 const probe = createServer();
 probe.listen(0, "127.0.0.1");
 await once(probe, "listening");
@@ -53,7 +55,38 @@ try {
   for (const page of [p, q])
     page.on("pageerror", (e) => errors.push(e.message));
   await p.goto(base);
+  await p.locator(".preview-note").first().waitFor();
+  await p.waitForFunction(() =>
+    [...document.querySelectorAll(".preview-note,.studio-title > span")].every(
+      (node) => Number(getComputedStyle(node).opacity) > 0.99,
+    ),
+  );
+  for (const width of [1440, 390]) {
+    await p.setViewportSize({ width, height: 900 });
+    assert(
+      await p.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    );
+    await p.screenshot({
+      path: join(out, `entry-${width}.png`),
+      fullPage: true,
+    });
+  }
+  await p.setViewportSize({ width: 1440, height: 900 });
+  const previewTitle = await p.locator(".preview-note h2").first().innerText();
+  await p
+    .getByRole("button", { name: `Move ${previewTitle} forward`, exact: true })
+    .click();
+  await p
+    .getByRole("button", { name: "Enter your shared board", exact: false })
+    .click();
   await p.getByText("Synced", { exact: true }).waitFor();
+  await p
+    .locator(".lane")
+    .filter({ has: p.getByRole("heading", { name: /In progress/ }) })
+    .getByText(previewTitle, { exact: true })
+    .waitFor();
   await q.goto(p.url());
   await q.getByText("Synced", { exact: true }).waitFor();
   await p.keyboard.press("n");
@@ -65,16 +98,24 @@ try {
       .filter({ hasText: "Verify release handoff" })
       .first();
   await task(q).waitFor();
-  await task(p).dragTo(
-    p
+  await p.evaluate(() => { window.dragEvents = []; for (const type of ["dragstart", "dragover", "drop", "dragend"]) window.addEventListener(type, (event) => window.dragEvents.push({ type, target: event.target.className, id: event.dataTransfer?.getData("text/plain") }), true); });
+  try {
+    await task(p).dragTo(
+      p
+        .locator(".lane")
+        .filter({ has: p.getByRole("heading", { name: /In progress/ }) }),
+    );
+    await q
       .locator(".lane")
-      .filter({ has: p.getByRole("heading", { name: /In progress/ }) }),
-  );
-  await q
-    .locator(".lane")
-    .filter({ has: q.getByRole("heading", { name: /In progress/ }) })
-    .getByText("Verify release handoff", { exact: true })
-    .waitFor();
+      .filter({ has: q.getByRole("heading", { name: /In progress/ }) })
+      .getByText("Verify release handoff", { exact: true })
+      .waitFor();
+  } catch (error) {
+    await p.screenshot({ path: join(out, "drag-failure.png"), fullPage: true });
+    console.log(await p.locator(".lane").allInnerTexts());
+    console.log(await p.evaluate(() => window.dragEvents));
+    throw error;
+  }
   await task(p).click();
   await task(q).click();
   const notes = (page) => page.getByLabel("Shared notes");
@@ -120,6 +161,7 @@ try {
   await task(p).click();
   assert.match(await notes(p).inputValue(), /Ship checklist/);
   await p.getByRole("button", { name: "Close ×" }).click();
+  await p.screenshot({ path: join(out, "board-desktop.png"), fullPage: true });
   for (const [width, height] of [
     [390, 844],
     [360, 640],
@@ -138,7 +180,20 @@ try {
       ),
     );
     await p.keyboard.press("Escape");
+    if (width === 390)
+      await p.screenshot({
+        path: join(out, "board-phone.png"),
+        fullPage: true,
+      });
   }
+  await p.emulateMedia({ reducedMotion: "reduce" });
+  assert.equal(
+    await p
+      .locator(".task")
+      .first()
+      .evaluate((el) => getComputedStyle(el).transitionDuration),
+    "0s",
+  );
   assert.deepEqual(errors, []);
   console.log(
     "PASS two independent browsers: real drag/drop, concurrent text, presence, comments, status, activity, keyboard filter, reload and responsive layouts.",

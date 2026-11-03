@@ -1,5 +1,7 @@
 # SyncBoard
 
+The creative studio redesign uses warm paper, coral and lavender across its landing page and live workspace. The landing preview reads actual Yjs cards and moves them with the existing persisted move operation. Shared links open directly into the board. GSAP motion respects reduced motion; drag-time geometry stays stable. References: FigJam and makemepulse, with no copied layouts or artwork. Screenshots: `.qa/redesign`. Production two-browser concurrency, offline recovery and disk-persistence checks pass.
+
 Architecture: a shared board is a Y.Doc with maps for cards, comments and activity. Each client applies local transactions immediately and sends binary Yjs updates over a WebSocket. The server serializes writes per board, persists each update before acknowledging it, and broadcasts to peers. Reconnecting clients exchange state vectors to reconcile offline edits. Cursor presence is transient and never written to the database. A share URL is a bearer capability; this MVP is designed for trusted collaborators.
 
 ## Run
@@ -15,3 +17,7 @@ New board creates a separate workspace; the pencil beside its title renames it f
 After npm run build, run npm run test:browser. Set CHROME_PATH to a Chrome or Chromium executable (defaults to standard Windows Chrome). The browser check starts its own isolated production server and verifies two browser contexts, simultaneous editing, drag/drop, comments, live cursor, activity, keyboard navigation and narrow layouts.
 
 npm test connects independent clients over actual WebSockets, edits one Y.Text concurrently, exchanges cursor positions, reconnects a disconnected editor, then closes and reopens the disk database to confirm saved content. A shared URL grants editing access, including reading activity and comments; choose fictional data in public demos. Display names are labels, not authenticated identities. Single application-server deployment. Multiple replicas need a shared broadcast layer before horizontal scaling.
+
+## Continue with an AI on another device
+
+Read [AI_HANDOFF.md](AI_HANDOFF.md) for product purpose, visual identity, architecture, setup, verification and remaining limits. The latest redesign and guest-mode work is on the handoff/studio-redesign branch. Local databases, environment files and browser guest meals are not included in Git.
